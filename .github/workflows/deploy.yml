@@ -1,0 +1,51 @@
+name: Deploy dblckr
+ 
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+env:
+  TF_LOG: INFO
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Deploy
+        run: echo "deploying ..."
+
+      - name: Git checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials from AWS account
+        # https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: us-east-1
+          role-session-name: GitHub-OIDC-Terraform
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        id: init
+        run: |
+          terraform init
+
+      - name: Terraform validate
+        id: validate
+        run: |
+          terraform validate -no-color
+
+      - name: Terraform apply
+        run: |
+          perl -p -i -e 's/REPLACE_WITH_API_KEY/'"${{ secrets.TAILSCALE_API_KEY }}"'/' config.auto.tfvars
+          perl -p -i -e 's/REPLACE_WITH_TAILNET/'"${{ secrets.TAILSCALE_TAILNET }}"'/' config.auto.tfvars
+          perl -p -i -e 's/^# //' config.auto.tfvars
+          terraform apply -auto-approve -input=false -no-color

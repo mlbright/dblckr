@@ -1,0 +1,11 @@
+[Unit]
+Description=TailScale Setup
+After=syslog.target network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tailscale-setup.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

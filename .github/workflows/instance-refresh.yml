@@ -1,0 +1,48 @@
+name: Instance refresh
+ 
+on:
+  #schedule:
+  #  - cron: "30 1 1,15 * *"
+  workflow_dispatch:
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: kick off instance refresh
+        run: echo "refreshing instance(s) ..."
+      - name: configure AWS credentials from AWS account
+        # https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: us-east-1
+          role-session-name: GitHub-OIDC-InstanceRefresh
+      - name: instance refresh
+        run: |
+          asg_name=$(aws autoscaling describe-auto-scaling-groups \
+            --filter "Name=tag:Name,Values=adblocker" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
+
+          if [[ $asg_name == "None" ]]; then
+            echo "No AutoScalingGroup found with tag Name=adblocker"
+            exit 1
+          fi
+
+          cat > instance-refresh-params.json <<EOF
+          {
+              "AutoScalingGroupName": "$asg_name",
+              "Preferences": {
+                "AutoRollback": false,
+                "MinHealthyPercentage": 100,
+                "SkipMatching": false,
+                "StandbyInstances": "Terminate"
+              }
+          }
+          EOF
+
+          aws autoscaling start-instance-refresh --cli-input-json file://instance-refresh-params.json

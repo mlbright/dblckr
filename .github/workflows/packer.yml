@@ -1,0 +1,42 @@
+name: Build dblckr AMI
+ 
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+env:
+  # TF_LOG: INFO
+  AWS_REGION: us-east-1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Build
+        run: echo "building ..."
+
+      - name: Git checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials from AWS account
+        # https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: us-east-1
+          role-session-name: GitHub-OIDC-Terraform
+
+      - name: Set up HashiCorp Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          packer_version: latest  # You can specify a specific version if needed
+
+      - name: Initialize Packer template
+        run: packer init ./pihole.pkr.hcl
+
+      - name: Build Packer image
+        run: packer build ./pihole.pkr.hcl
