@@ -21,7 +21,7 @@ If you find your pull request is closed and not merged, please feel free to fork
 The Pi-hole image is built using [Packer](https://www.packer.io/).
 
 ```bash
-packer init
+packer init -force -upgrade ./pihole.pkr.hcl
 packer fmt -check ./pihole.pkr.hcl
 packer validate ./pihole.pkr.hcl
 packer build ./pihole.pkr.hcl
@@ -52,7 +52,7 @@ See the AWS documentation for more information on how to [set up the GitHub Acti
 ## TODO
 
 - [x] Update to Ubuntu 24.04 LTS
-- [ ] Update to Graviton instance
+- [x] Update to Graviton instance
 - [x] Ensure forks cannot execute deployments
 - [x] Run the Terraform from GitHub Actions
 - [x] Update the docs
