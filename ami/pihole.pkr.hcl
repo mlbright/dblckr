@@ -9,7 +9,7 @@ packer {
 
 source "amazon-ebs" "pihole" {
   ami_name      = "pihole-linux-aws-{{uuid}}"
-  instance_type = "t3.micro"
+  instance_type = "t4g.nano"
   region        = "us-east-1"
 
   # Find AMI from https://cloud-images.ubuntu.com/locator/ec2/
@@ -18,9 +18,7 @@ source "amazon-ebs" "pihole" {
   # https://stackoverflow.com/questions/75240350/packer-builder-source-ami-filter-for-ubuntu-22-04
   source_ami_filter {
     filters = {
-      # name                = "ubuntu/images/*ubuntu-jammy-22.04-amd64-server-*"
-      # name = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-20250228"
-      name = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
+      name = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-server-*"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }

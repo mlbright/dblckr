@@ -21,7 +21,7 @@ If you find your pull request is closed and not merged, please feel free to fork
 The Pi-hole image is built using [Packer](https://www.packer.io/).
 
 ```bash
-packer init
+packer init -force -upgrade ./pihole.pkr.hcl
 packer fmt -check ./pihole.pkr.hcl
 packer validate ./pihole.pkr.hcl
 packer build ./pihole.pkr.hcl

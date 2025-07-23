@@ -3,10 +3,10 @@ set -e
 
 # install Tailscale
 #
+curl -fsSL https://tailscale.com/install.sh | bash
+
 # Only run this if we need to use this as an exit node.
 # sysctl -p /etc/sysctl.d/99-tailscale.conf
-#
-curl -fsSL https://tailscale.com/install.sh | bash
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -15,11 +15,10 @@ apt upgrade -y
 apt install -y jq
 
 # install cloudflared
-mkdir -p --mode=0755 /usr/share/keyrings
-curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
-echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared noble main' | tee /etc/apt/sources.list.d/cloudflared.list
-apt update
-apt install -y cloudflared
+wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64
+sudo mv -f ./cloudflared-linux-arm64 /usr/local/bin/cloudflared
+sudo chmod +x /usr/local/bin/cloudflared
+
 useradd -s /usr/sbin/nologin -r -M cloudflared
 chown cloudflared:cloudflared /etc/default/cloudflared
 chown cloudflared:cloudflared /usr/local/bin/cloudflared
