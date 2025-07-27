@@ -6,7 +6,7 @@ variable "pihole_ami_id" {
 variable "tags" {
   type = map(string)
   default = {
-    Name = "adblocker"
+    "deployment" = "adblocker"
   }
 }
 
@@ -19,12 +19,29 @@ variable "vpc" {
   }
 }
 
-variable "private_subnet" {
-  type = object({
-    cidr_block = string
-  })
+variable "private_subnets" {
+  type = map(object({
+    ipv4_cidr = string
+  }))
   default = {
-    cidr_block = "10.0.1.0/28"
+    "a" = {
+      ipv4_cidr = "10.0.1.0/28"
+    }
+    "b" = {
+      ipv4_cidr = "10.0.2.0/28"
+    }
+    "c" = {
+      ipv4_cidr = "10.0.3.0/28"
+    }
+    "d" = {
+      ipv4_cidr = "10.0.4.0/28"
+    }
+    "e" = {
+      ipv4_cidr = "10.0.5.0/28"
+    }
+    "f" = {
+      ipv4_cidr = "10.0.6.0/28"
+    }
   }
 }
 
