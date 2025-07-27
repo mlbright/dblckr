@@ -43,24 +43,14 @@ terraform apply
 The Terraform deployment can be done via GitHub Actions.
 See the AWS documentation for more information on how to [set up the GitHub Actions workflow via OIDC][aws-github-actions-oidc].
 
+__**Note:** The Terraform state files will contain sensitive information, such as the Tailscale auth key.
+Ensure that the S3 bucket is private and that you have proper access controls in place.__
+
 ## Observations
 
 - As of `Sat Mar 29 14:29:57 EDT 2025`, the spot instance has been forcibly replaced by AWS only 5 times since the service started running in mid August 2024.
 - The total cost of the service is less than $3.00 per month.
     - The tailnet has less than 10 devices and 1 user, where only 2 devices are heavily used at once.
-
-## TODO
-
-- [x] Update to Ubuntu 24.04 LTS
-- [x] Update to Graviton instance
-- [x] Ensure forks cannot execute deployments
-- [x] Run the Terraform from GitHub Actions
-- [x] Update the docs
-- [x] Add a license
-- [x] Add contribution guidelines
-- [x] Make the repo public
-- [x] compute optimizer
-- [x] IMDSv2
 
 
 [pihole]: https://pi-hole.net/
