@@ -1,5 +1,5 @@
 resource "aws_ec2_instance_connect_endpoint" "connect" {
-  subnet_id          = aws_subnet.private.id
+  subnet_id          = aws_subnet.private["a"].id
   preserve_client_ip = false
   security_group_ids = [aws_security_group.ec2_connect_endpoint.id]
 }
@@ -11,13 +11,24 @@ resource "aws_vpc" "adblocker" {
   enable_dns_support               = true
 }
 
+locals {
+  zones = {
+    "a" = 0
+    "b" = 1
+    "c" = 2
+    "d" = 3
+    "e" = 4
+    "f" = 5
+  }
+}
+
 resource "aws_subnet" "private" {
+  for_each                        = var.private_subnets
   vpc_id                          = aws_vpc.adblocker.id
-  ipv6_cidr_block                 = aws_vpc.adblocker.ipv6_cidr_block
-  cidr_block                      = var.private_subnet.cidr_block
-  enable_dns64                    = true
+  cidr_block                      = each.value.ipv4_cidr
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.adblocker.ipv6_cidr_block, 8, local.zones[each.key])
   assign_ipv6_address_on_creation = true
-  availability_zone               = "${var.region}a"
+  availability_zone               = "${var.region}${each.key}"
 }
 
 resource "aws_egress_only_internet_gateway" "tailscale" {
@@ -34,7 +45,8 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route_table_association" "private" {
-  subnet_id      = aws_subnet.private.id
+  for_each       = { for s in aws_subnet.private : s.availability_zone => s.id }
+  subnet_id      = each.value
   route_table_id = aws_route_table.private.id
 }
 
@@ -69,7 +81,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_inbound_ipv4_from_vpc" {
 
 resource "aws_autoscaling_group" "adblocker" {
   name_prefix         = "adblocker"
-  vpc_zone_identifier = [aws_subnet.private.id]
+  vpc_zone_identifier = [for s in aws_subnet.private : s.id]
   launch_template {
     id      = aws_launch_template.adblocker.id
     version = aws_launch_template.adblocker.latest_version
@@ -93,6 +105,11 @@ resource "aws_autoscaling_group" "adblocker" {
   }
 
   health_check_type = "EC2"
+
+  availability_zone_distribution {
+    capacity_distribution_strategy = "balanced-best-effort" # ... is the default
+  }
+
   depends_on = [
     aws_egress_only_internet_gateway.tailscale,
     aws_route_table_association.private,
