@@ -88,7 +88,7 @@ resource "aws_autoscaling_group" "adblocker" {
   }
 
   min_size         = 1
-  max_size         = 1
+  max_size         = 2
   desired_capacity = 1
 
   tag {
@@ -103,6 +103,8 @@ resource "aws_autoscaling_group" "adblocker" {
       min_healthy_percentage = 100
     }
   }
+
+  capacity_rebalance = true
 
   health_check_type = "EC2"
 
