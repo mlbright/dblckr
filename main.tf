@@ -80,21 +80,23 @@ resource "aws_vpc_security_group_ingress_rule" "allow_inbound_ipv4_from_vpc" {
 }
 
 resource "aws_autoscaling_group" "adblocker" {
-  name_prefix         = "adblocker"
-  vpc_zone_identifier = [for s in aws_subnet.private : s.id]
-  launch_template {
-    id      = aws_launch_template.adblocker.id
-    version = aws_launch_template.adblocker.latest_version
-  }
-
-  min_size         = 1
-  max_size         = 1
-  desired_capacity = 1
-
+  name_prefix = "adblocker"
   tag {
     key                 = "Name"
     value               = "adblocker"
     propagate_at_launch = true
+  }
+
+  health_check_type = "EC2"
+
+  min_size           = 1
+  max_size           = 1
+  desired_capacity   = 1
+  capacity_rebalance = true
+
+  vpc_zone_identifier = [for s in aws_subnet.private : s.id]
+  availability_zone_distribution {
+    capacity_distribution_strategy = "balanced-best-effort" # ... is the default
   }
 
   instance_refresh {
@@ -104,10 +106,32 @@ resource "aws_autoscaling_group" "adblocker" {
     }
   }
 
-  health_check_type = "EC2"
+  mixed_instances_policy {
+    instances_distribution {
+      on_demand_allocation_strategy            = "lowest-price"
+      on_demand_base_capacity                  = 0
+      on_demand_percentage_above_base_capacity = 0
+      spot_allocation_strategy                 = "price-capacity-optimized"
+    }
 
-  availability_zone_distribution {
-    capacity_distribution_strategy = "balanced-best-effort" # ... is the default
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.adblocker.id
+        # A refresh will not start when version = "$Latest" is configured in the launch_template block.
+        # To trigger the instance refresh when a launch template is changed,
+        # configure version to use the latest_version attribute of the aws_launch_template resource.
+        version = aws_launch_template.adblocker.latest_version
+      }
+
+      override {
+        instance_type = "t4g.nano"
+      }
+
+      override {
+        instance_type = "t4g.micro"
+      }
+
+    }
   }
 
   depends_on = [
@@ -140,13 +164,6 @@ resource "aws_launch_template" "adblocker" {
   }
 
   update_default_version = true
-
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      instance_interruption_behavior = "terminate"
-    }
-  }
 }
 
 resource "tailscale_tailnet_key" "pre_authentication_key" {
