@@ -66,10 +66,21 @@ func checkMetadata(token string, ntfyTopic string) {
 	if err == nil && resp.StatusCode == 200 {
 		defer resp.Body.Close()
 		var notice SpotInterruptionNotice
-		if err := json.NewDecoder(resp.Body).Decode(&notice); err == nil {
+		err = json.NewDecoder(resp.Body).Decode(&notice)
+		if err == nil {
 			log.Printf("SPOT INTERRUPTION NOTICE: Action: %s, Time: %s", notice.Action, notice.Time)
-			// Here you could trigger any graceful shutdown process
+			err = SendNtfyNotification(NtfyMessage{
+				Topic:   ntfyTopic,
+				Title:   "EC2 Spot Instance Interruption",
+				Message: "Spot instance interruption notice received",
+				Tags:    "info,cloud",
+			})
+			if err != nil {
+				log.Printf("Failed to send ntfy notification: %v", err)
+			}
 		}
+	} else {
+		log.Printf("No spot interruption notice found or error: %v", err)
 	}
 
 	// Check for rebalance recommendation
@@ -80,21 +91,20 @@ func checkMetadata(token string, ntfyTopic string) {
 	if err == nil && resp.StatusCode == 200 {
 		defer resp.Body.Close()
 		var rebalance RebalanceRecommendation
-		if err := json.NewDecoder(resp.Body).Decode(&rebalance); err == nil {
+		if err = json.NewDecoder(resp.Body).Decode(&rebalance); err == nil {
 			log.Printf("REBALANCE RECOMMENDATION: Notice Time: %s", rebalance.NoticeTime)
-			// Send notification via ntfy.sh
-			err := SendNtfyNotification(NtfyMessage{
-				Topic:    ntfyTopic,
-				Title:    "EC2 Rebalance Recommendation",
-				Message:  "Instance received rebalance recommendation",
-				Priority: 3, // Medium priority
-				Tags:     "info,cloud",
+			err = SendNtfyNotification(NtfyMessage{
+				Topic:   ntfyTopic,
+				Title:   "EC2 Rebalance Recommendation",
+				Message: "Instance received rebalance recommendation",
+				Tags:    "info,cloud",
 			})
 			if err != nil {
 				log.Printf("Failed to send ntfy notification: %v", err)
 			}
-			// Here you could trigger proactive instance replacement
 		}
+	} else {
+		log.Printf("No rebalance recommendation found or error: %v", err)
 	}
 }
 
@@ -151,6 +161,11 @@ func main() {
 	log.Println("EC2 Interruption Monitor starting...")
 
 	ntfyTopic := os.Getenv("NTFY_TOPIC")
+	if ntfyTopic == "" {
+		log.Fatal("NTFY_TOPIC environment variable is not set")
+	}
+
+	log.Println("Using ntfy topic:", ntfyTopic)
 
 	// Setup signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
