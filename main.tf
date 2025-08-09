@@ -95,9 +95,6 @@ resource "aws_autoscaling_group" "adblocker" {
   capacity_rebalance = true
 
   vpc_zone_identifier = [for s in aws_subnet.private : s.id]
-  availability_zone_distribution {
-    capacity_distribution_strategy = "balanced-best-effort" # ... is the default
-  }
 
   instance_refresh {
     strategy = "Rolling"
