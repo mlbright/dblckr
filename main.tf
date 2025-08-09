@@ -130,7 +130,6 @@ resource "aws_autoscaling_group" "adblocker" {
       override {
         instance_type = "t4g.micro"
       }
-
     }
   }
 
