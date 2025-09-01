@@ -36,9 +36,6 @@ variable "private_subnets" {
     "d" = {
       ipv4_cidr = "10.0.4.0/28"
     }
-    "e" = {
-      ipv4_cidr = "10.0.5.0/28"
-    }
     "f" = {
       ipv4_cidr = "10.0.6.0/28"
     }

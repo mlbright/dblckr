@@ -55,8 +55,8 @@ build {
       "sudo rsync -av /tmp/usr/ /usr/",
       "chmod +x /tmp/dblckr-setup.sh",
       "sudo /tmp/dblckr-setup.sh",
-      "curl -L -o /tmp/icrn_0.1.9_arm64.deb https://github.com/mlbright/icrn/releases/download/v0.1.9/icrn_0.1.9_arm64.deb",
-      "sudo apt install -y /tmp/icrn_0.1.9_arm64.deb",
+      "curl -L -o /tmp/icrn_0.1.10_arm64.deb https://github.com/mlbright/icrn/releases/download/v0.1.10/icrn_0.1.10_arm64.deb",
+      "sudo apt install -y /tmp/icrn_0.1.10_arm64.deb",
     ]
   }
 }

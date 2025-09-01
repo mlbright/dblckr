@@ -17,8 +17,7 @@ locals {
     "b" = 1
     "c" = 2
     "d" = 3
-    "e" = 4
-    "f" = 5
+    "f" = 4
   }
 }
 
@@ -148,7 +147,7 @@ resource "aws_launch_template" "adblocker" {
     tailscale_auth_key = tailscale_tailnet_key.pre_authentication_key.key,
     tailscale_tailnet  = var.tailscale.tailnet,
     tailscale_api_key  = var.tailscale.api_key,
-    NTFY_TOPIC = var.ntfy.topic,
+    NTFY_TOPIC         = var.ntfy.topic,
   }))
 
   vpc_security_group_ids = [aws_security_group.pihole.id]
